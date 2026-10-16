@@ -1,0 +1,25 @@
+.gradle/
+build/
+out/
+run/
+
+.idea/
+*.iml
+
+.vscode/
+
+bin/
+
+*.log
+
+.DS_Store
+Thumbs.db
+
+# Minecraft runtime
+logs/
+crash-reports/
+saves/
+screenshots/
+
+# Generated Loom files
+remappedSrc/
