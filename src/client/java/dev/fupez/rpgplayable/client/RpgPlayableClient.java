@@ -1,30 +1,28 @@
 package dev.fupez.rpgplayable.client;
 
-import dev.fupez.rpgplayable.RpgPlayable;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.util.Identifier;
+import org.lwjgl.glfw.GLFW;
 
 public final class RpgPlayableClient implements ClientModInitializer {
-    @Override
-    public void onInitializeClient() {
-        ClientProgress.register();
-        ClientCleave.register();
-        var category = net.minecraft.client.option.KeyBinding.Category.create(
-                net.minecraft.util.Identifier.of("rpgplayable", "general"));
-        var characterKey = net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.registerKeyBinding(
-                new net.minecraft.client.option.KeyBinding("key.rpgplayable.character", org.lwjgl.glfw.GLFW.GLFW_KEY_K, category));
-        dev.fupez.rpgplayable.client.hud.ProgressHud.register(characterKey);
-        var cleaveKey = net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper.registerKeyBinding(
-                new net.minecraft.client.option.KeyBinding("key.rpgplayable.cleave", org.lwjgl.glfw.GLFW.GLFW_KEY_R, category));
-        dev.fupez.rpgplayable.client.hud.CleaveHud.register(cleaveKey);
-        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (cleaveKey.wasPressed()) {
-                if (client.currentScreen == null) ClientCleave.request();
-            }
-            while (characterKey.wasPressed()) {
-                if (client.player != null && client.currentScreen == null)
-                    client.setScreen(new dev.fupez.rpgplayable.client.screen.CharacterScreen());
-            }
+    @Override public void onInitializeClient() {
+        ClientProgress.register(); ClientAbilities.register();
+        var category = KeyBinding.Category.create(Identifier.of("rpgplayable", "general"));
+        var character = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.rpgplayable.character", GLFW.GLFW_KEY_K, category));
+        KeyBinding[] abilities = new KeyBinding[3];
+        int[] defaults = {GLFW.GLFW_KEY_R, GLFW.GLFW_KEY_Z, GLFW.GLFW_KEY_X};
+        for (int i = 0; i < 3; i++) abilities[i] = KeyBindingHelper.registerKeyBinding(
+                new KeyBinding("key.rpgplayable.ability_" + (i + 1), defaults[i], category));
+        dev.fupez.rpgplayable.client.hud.ProgressHud.register(character);
+        dev.fupez.rpgplayable.client.hud.AbilityHud.register(abilities);
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            for (int slot = 0; slot < 3; slot++) while (abilities[slot].wasPressed())
+                if (client.currentScreen == null) ClientAbilities.request(slot);
+            while (character.wasPressed()) if (client.player != null && client.currentScreen == null)
+                client.setScreen(new dev.fupez.rpgplayable.client.screen.CharacterScreen());
         });
-        RpgPlayable.LOGGER.info("RPG Playable client initialized");
     }
 }

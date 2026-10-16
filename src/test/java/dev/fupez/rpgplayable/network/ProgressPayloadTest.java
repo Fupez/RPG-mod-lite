@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ProgressPayloadTest {
     @Test void requestsCannotSupplyXpPointsDamageOrInvalidActions() {
         assertThrows(IllegalArgumentException.class, () -> new ProgressActionPayload(-1, 1));
-        assertThrows(IllegalArgumentException.class, () -> new ProgressActionPayload(2, 1));
+        assertThrows(IllegalArgumentException.class, () -> new ProgressActionPayload(8, 1));
         assertThrows(IllegalArgumentException.class, () -> new ProgressActionPayload(0, 0));
         assertEquals(17, new ProgressActionPayload(ProgressActionPayload.ALLOCATE_STRENGTH, 17).requestId());
     }

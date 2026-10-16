@@ -3,6 +3,7 @@ package dev.fupez.rpgplayable.client;
 import dev.fupez.rpgplayable.network.*;
 import dev.fupez.rpgplayable.player.*;
 import org.junit.jupiter.api.Test;
+import java.math.BigInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ClientProgressStateTest {
@@ -31,12 +32,12 @@ class ClientProgressStateTest {
         state.beginRequest(ProgressActionPayload.ALLOCATE_STRENGTH).orElseThrow();
         for (int i = 0; i < 100; i++) state.tick();
         assertFalse(state.pending()); assertEquals(ClientProgressState.Feedback.TIMEOUT, state.feedback());
-        assertEquals(0, state.snapshot().progress().strength());
+        assertEquals(BigInteger.ZERO, state.snapshot().progress().strength());
     }
     @Test void allocationChangesOnlyWhenAuthoritativeReplyArrives() {
         var state = new ClientProgressState(); state.accept(snapshot(2, 0, true));
         var request = state.beginRequest(ProgressActionPayload.ALLOCATE_STRENGTH).orElseThrow();
-        assertEquals(0, state.snapshot().progress().strength());
+        assertEquals(BigInteger.ZERO, state.snapshot().progress().strength());
         var allocated = new PlayerProgress(PlayerClass.WARRIOR, 2, 0, 0, 1);
         state.accept(new ProgressSnapshotPayload(allocated, 150, 0.5, request.requestId(), true));
         assertEquals(allocated, state.snapshot().progress());
@@ -50,5 +51,20 @@ class ClientProgressStateTest {
         state.clear(); assertNull(state.snapshot());
         assertFalse(state.accept(snapshot(50, 0, true)));
         assertEquals(0, state.levelUpTicks());
+    }
+    @Test void everyClassAndStatUsesTheSameAuthoritativePendingFlow() {
+        for (int action : new int[]{0, 2, 3}) {
+            var state = new ClientProgressState();
+            state.accept(new ProgressSnapshotPayload(PlayerProgress.DEFAULT, 100, 0, 0, true));
+            assertTrue(state.beginRequest(action).isPresent());
+        }
+        for (int action : new int[]{1, 4, 5, 6, 7}) {
+            var state = new ClientProgressState(); state.accept(snapshot(2, 0, true));
+            assertTrue(state.beginRequest(action).isPresent());
+        }
+        var state = new ClientProgressState(); state.accept(snapshot(1, 0, true));
+        assertTrue(state.beginRequest(ProgressActionPayload.SELECT_MAGE).isEmpty());
+        assertTrue(state.beginRequest(ProgressActionPayload.ALLOCATE_SPIRIT).isEmpty());
+        assertTrue(state.beginRequest(99).isEmpty());
     }
 }

@@ -1,6 +1,6 @@
 package dev.fupez.rpgplayable.client.mixin;
 
-import dev.fupez.rpgplayable.client.ClientCleave;
+import dev.fupez.rpgplayable.client.ClientAbilities;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.item.HeldItemRenderer;
@@ -23,11 +23,29 @@ abstract class CleaveHandMixin {
             OrderedRenderCommandQueue queue, int light, CallbackInfo ci) {
         matrices.push();
         if (hand != Hand.MAIN_HAND) return;
-        float weight = ClientCleave.state().pose(tickProgress);
+        float weight = ClientAbilities.state().pose(tickProgress);
+        int style = ClientAbilities.state().style();
         float side = player.getMainArm() == Arm.RIGHT ? 1 : -1;
-        matrices.translate(0.10f * side * weight, -0.08f * weight, -0.18f * weight);
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-30 * side * weight));
-        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(20 * side * weight));
+        switch (style) {
+            case 1 -> { // cast: palm and held catalyst extend toward the target
+                matrices.translate(-0.12f * side * weight, 0.12f * weight, -0.36f * weight);
+                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-28 * weight));
+                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(18 * side * weight));
+            }
+            case 2 -> { // dash: brace the hand beside the body
+                matrices.translate(0.18f * side * weight, -0.24f * weight, 0.12f * weight);
+                matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(38 * side * weight));
+            }
+            case 3 -> { // slam: lift, then drive down through the recovery envelope
+                matrices.translate(0, 0.40f * weight, -0.14f * weight);
+                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-65 * weight));
+            }
+            default -> {
+                matrices.translate(0.10f * side * weight, -0.08f * weight, -0.18f * weight);
+                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-30 * side * weight));
+                matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(20 * side * weight));
+            }
+        }
     }
     @Inject(method = "renderFirstPersonItem", at = @At("RETURN"))
     private void rpgplayable$restore(AbstractClientPlayerEntity player, float tickProgress, float pitch,

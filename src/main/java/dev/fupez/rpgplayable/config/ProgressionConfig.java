@@ -1,6 +1,7 @@
 package dev.fupez.rpgplayable.config;
 
 import dev.fupez.rpgplayable.player.ProgressionRules;
+import dev.fupez.rpgplayable.stats.StatTuning;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,7 +21,7 @@ public final class ProgressionConfig {
                         xpStep=50
                         killXp=25
                         strengthDamage=0.5
-                        """, StandardOpenOption.CREATE_NEW);
+                        """ + StatTuning.defaultsText(), StandardOpenOption.CREATE_NEW);
             } catch (java.nio.file.FileAlreadyExistsException concurrentCreation) {
                 // A concurrently created user file is read, never replaced.
             }
@@ -32,7 +33,7 @@ public final class ProgressionConfig {
                     Integer.parseInt(properties.getProperty("baseXp", "100").trim()),
                     Integer.parseInt(properties.getProperty("xpStep", "50").trim()),
                     Integer.parseInt(properties.getProperty("killXp", "25").trim()),
-                    Double.parseDouble(properties.getProperty("strengthDamage", "0.5").trim()));
+                    Double.parseDouble(properties.getProperty("strengthDamage", "0.5").trim()), StatTuning.from(properties));
         } catch (IllegalArgumentException invalid) {
             throw new IllegalArgumentException("Invalid RPG configuration at " + file + ": " + invalid.getMessage(), invalid);
         }

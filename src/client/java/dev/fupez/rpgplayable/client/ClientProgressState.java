@@ -22,8 +22,9 @@ public final class ClientProgressState {
     public Optional<ProgressActionPayload> beginRequest(int action) {
         if (snapshot == null || pending()) return Optional.empty();
         var p = snapshot.progress();
-        if (action == ProgressActionPayload.SELECT_WARRIOR && p.selected()
-                || action == ProgressActionPayload.ALLOCATE_STRENGTH && (!p.selected() || p.unspentPoints() == 0))
+        boolean selection = action == ProgressActionPayload.SELECT_WARRIOR || action == ProgressActionPayload.SELECT_MAGE || action == ProgressActionPayload.SELECT_ROGUE;
+        if (action < 0 || action > 7 || selection && p.selected()
+                || !selection && (!p.selected() || p.unspentPoints().signum() == 0))
             return Optional.empty();
         long id = nextRequest;
         nextRequest = nextRequest == Long.MAX_VALUE ? 1 : nextRequest + 1;
@@ -36,7 +37,7 @@ public final class ClientProgressState {
 
     /** Returns true once for a newly observed level; never on first sync or rejoin. */
     public boolean accept(ProgressSnapshotPayload update) {
-        boolean leveled = snapshot != null && update.progress().level() > snapshot.progress().level();
+        boolean leveled = snapshot != null && update.progress().level().compareTo(snapshot.progress().level()) > 0;
         snapshot = update;
         if (pending() && pendingId == update.requestId()) {
             pendingId = 0;

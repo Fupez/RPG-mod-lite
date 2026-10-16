@@ -3,7 +3,7 @@
   "id": "rpgplayable",
   "version": "${version}",
   "name": "RPG Playable",
-  "description": "A standalone Minecraft RPG: Warrior progression and Cleave combat.",
+  "description": "A standalone RPG alpha with unlimited progression, five stats, three classes and nine abilities.",
   "authors": [
     "Fupez"
   ],

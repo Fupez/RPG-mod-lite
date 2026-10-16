@@ -1,7 +1,7 @@
 package dev.fupez.rpgplayable.player;
 
 public enum PlayerClass {
-    UNSELECTED("none"), WARRIOR("warrior");
+    UNSELECTED("none"), WARRIOR("warrior"), MAGE("mage"), ROGUE("rogue");
 
     private final String id;
     PlayerClass(String id) { this.id = id; }

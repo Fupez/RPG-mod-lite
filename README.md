@@ -1,109 +1,79 @@
-# RPG Playable
+# RPG Playable alpha
 
-Standalone Minecraft Java 1.21.10 RPG project in `Fupez/RPG-mod-lite`.
-The first playable slice adds Warrior selection, RPG XP from hostile mobs,
-leveling, and Strength allocation with a real melee-damage bonus. Vanilla XP is
-unchanged. Warrior now has Cleave; other class kits are not implemented yet.
-It requires Fabric Loader 0.19.5 or later and Fabric API 0.138.4+1.21.10
-or a compatible later release for Minecraft 1.21.10. It does not depend on
-`Fupez/RPG-mod` or any of that project's mod JARs.
+Standalone Minecraft Java 1.21.10 Fabric mod. Choose Warrior, Mage or Rogue,
+earn RPG XP from hostile kills, allocate Strength, Vitality, Agility,
+Intelligence and Spirit, and use three abilities per class. Vanilla XP is unchanged.
+Level, XP and stat counters use arbitrary precision; native combat effects have
+safe diminishing returns. Class choice is permanent for the alpha.
 
-## Development
+Requires Java 21, Fabric Loader 0.19.5+ and Fabric API 0.138.4+1.21.10
+(or compatible later versions for Minecraft 1.21.10). No RPG-mod dependency.
 
-Use a **Java 21 JDK** (`java -version` and `javac -version`), not only a JRE.
-Use the checked-in Gradle 9.6.0 wrapper; no global Gradle is needed.
-All Minecraft, mappings, Loader, Fabric API and Loom versions are in
-`gradle.properties`. The wrapper distribution has a pinned SHA-256 checksum.
+## Develop and install
 
-From this repository:
+Use a Java 21 **JDK** and the checked-in Gradle wrapper:
 
 ```sh
-./gradlew --version
 ./gradlew check
 ./gradlew build
 ./gradlew runGameTest -PrpgGameTests=true
-./gradlew runClient
+./gradlew runClient --args='--username RPGDeveloper'
 ```
 
-For persistence testing across client restarts, use a stable development name:
-`./gradlew runClient --args='--username RPGDeveloper'`. Minecraft's default
-development name changes between launches, which creates different offline player
-identities. Keep the same name when checking an existing development save.
+Use `gradlew.bat` on Windows. Install `build/libs/rpg-playable-0.1.0.jar`,
+not the sources JAR. Keep the same development username when checking saved
+progress: changing names creates a different offline player identity. The cloud
+shell uses `source .gradle/cloud-env.sh` before Gradle. Graphical play requires a
+display, OpenGL and Minecraft assets; server tests do not verify visual feel.
 
-On Windows use `gradlew.bat`. The installable mod will be
-`build/libs/rpg-playable-0.1.0.jar`; the sources JAR is not an installable mod.
-Client startup requires a display, OpenGL and downloaded Minecraft assets.
-Look for `RPG Playable initialized` and `RPG Playable client initialized`, then
-confirm the title screen opens and closes normally. Compilation alone does not
-prove that startup works. Do not commit generated worlds or runtime files.
+## Local acceptance checklist
 
-Unit tests cover progression boundaries, allocation, config/save validation,
-request payloads and client acknowledgement/lifecycle state. Native server
-GameTests exercise hostile-kill rewards, actual attribute effects, save/rejoin,
-packet codecs, and death/respawn. CI runs the unit/native checks and builds using
-Java 21 and a Gradle dependency cache. Test classes are excluded from the
-installable JAR. Graphical acceptance is separate from these checks.
+- In a fresh Survival world press **K** and choose a class. Check Warrior, Mage
+  and Rogue in separate fresh worlds (or separate multiplayer player saves). Reopening K must show the selected class.
+- Defeat hostile mobs: default rewards are 25 RPG XP, with level 2 at 100 XP.
+  Confirm level-up feedback, one point per level and unchanged vanilla XP rules.
+  Passive mobs and Creative/spectator kills must not award RPG XP.
+- Allocate all five stats. Strength improves melee/mining, Vitality increases
+  health, Agility improves movement/attack speed, Intelligence improves magic
+  and mana, and Spirit improves regeneration/support. Confirm the displayed
+  effects and that points cannot be spent twice.
+- Use **R / Z / X** (all rebindable): Warrior **Heavy Strike / Charge / Ground
+  Slam**; Mage **Firebolt / Arcane Burst / Blink**; Rogue **Dash / Backstab /
+  Fan of Knives**. Check impact timing, hand animation, sounds, particles,
+  movement collision and hostile targeting. Firebolt must visibly travel.
+- Check mana/stamina spending, regeneration, cooldown countdown and recovery.
+  Spam keys, attempt casts without resources, and cast toward walls: the server
+  must reject unavailable casts and movement must stay outside solid blocks.
+- Check the HUD and K screen at normal and minimum GUI sizes: health,
+  resources, XP/level, all three class slots, costs and cooldowns remain readable.
+  Check first-person and a second player's view of ability impacts.
+- Save/rejoin, restart the client with the same identity, and die/respawn.
+  Class, XP, level and all allocated stats must survive; attributes must not
+  double. Reconnect or respawn during a cast must cancel its delayed impact
+  without providing a cooldown bypass.
 
-Use `./gradlew build --refresh-dependencies` only to investigate broken
-dependency caches, not as the default build command.
+Server tuning is created in `config/rpgplayable.properties` and the combat tuning
+file `config/rpgplayable-abilities.properties`. Restart the server after editing. Invalid tuning fails with
+an explicit startup error. Existing schema-1 Warrior saves migrate automatically;
+old level-100 saves can continue leveling. All five stat coefficients are configurable
+in `rpgplayable.properties` (see `StatTuning` for keys/defaults); legacy four-key
+configs retain defaults for missing keys. Resources regenerate server-side and
+restore to full on death or server restart. Reconnects retain resources and
+cooldowns within the running session; the short cooldowns reset on server restart.
+Warrior Heavy Strike evolves the earlier standalone Cleave, using the new shared
+resource/cooldown path. No separate Cleave subsystem remains.
 
-## Play the first slice
+The project has one Gradle module and mod ID, `rpgplayable`. Common/server code
+is in `src/main/java`, presentation in `src/client/java`, and native server tests
+in `src/gametest`. Tests are excluded from the installable JAR. Editable art belongs
+in `asset-sources/`; exported assets belong in `src/main/resources/assets/rpgplayable/`.
+`Fupez/RPG-mod` is read-only reference material; see the
+[focused reference map](docs/reference/reference-map.md). Earlier slice documents
+are historical; the checklist above describes the alpha.
 
-1. Join a Survival world and press **K** (rebindable under Controls → RPG Playable).
-2. Choose **Warrior**. Selection is permanent for this initial slice.
-3. Defeat hostile mobs. Default tuning grants 25 RPG XP per kill; four kills
-   reach level 2 and award one stat point.
-4. Open K and allocate Strength. Each point adds 0.5 vanilla attack damage by
-   default; the screen displays the server's actual bonus.
-5. Press **R** for **Cleave** (rebindable): a short wind-up, frontal strike and
-   recovery, with a five-second cooldown shown beside the hotbar. It targets
-   visible hostile mobs within three blocks, dealing 6 + Strength bonus damage
-   before vanilla mitigation. It does not require a weapon.
-
-The HUD shows XP/level/Strength; level-up feedback includes sound and particles.
-Normal gameplay uses the screen rather than commands or chat. XP, class and points
-survive save/rejoin and death. Creative/spectator kills, passive mobs and players
-without a selected class receive no RPG XP. The level cap is 100; excess XP at cap
-is discarded. This cap bounds even exceptionally large XP grants.
-
-Server tuning is created once in `config/rpgplayable.properties`:
-
-```properties
-baseXp=100
-xpStep=50
-killXp=25
-strengthDamage=0.5
-```
-
-Restart the server to apply edits. Invalid tuning fails startup with an explicit
-error and does not replace the file. Reducing XP requirements normalizes banked
-XP at next join/reward; already earned levels and allocations remain. The native
-Strength modifier is recomputed from saved RPG state, never stored twice.
-
-## Architecture and scope
-
-One Gradle module and one mod ID, `rpgplayable`, under
-`dev.fupez.rpgplayable`. `src/main/java` is common/server-safe;
-`src/client/java` holds the client initializer and later visual/input code.
-Loom compiles the source sets separately and packages both into one mod JAR.
-Shared metadata lives in `src/main/resources/fabric.mod.json`.
-
-Progression uses one versioned persistent Fabric attachment and intent/snapshot
-payloads. Cleave has its own server timing/targeting boundary and small typed
-request/state packets; session cooldowns survive player replacement and reconnect.
-One client-only mixin animates the first-person hand during wind-up/recovery;
-vanilla hand swings and particles mark the server's impact tick. No animation
-library or general ability framework is required. Keep editable assets in
-`asset-sources/` and exported assets in `src/main/resources/assets/rpgplayable/`.
-Editable source folders are provided for Blockbench, animations, UI, icons and
-textures. Add future packages only when they contain real code.
-
-`Fupez/RPG-mod` is strictly read-only reference material. Consult
-[the focused reference map](docs/reference/reference-map.md) before further audits;
-do not copy its four-module architecture, balance formulas or class catalog.
-
-See [the slice contract and manual checks](docs/development/first-playable-slice.md)
-for scope and remaining acceptance work. Mage, Rogue, the other four primary
-stats and additional abilities remain future slices; they have no placeholder gameplay.
-See [Cleave behavior and acceptance](docs/development/cleave.md) for timing, tuning
-and cooldown lifecycle.
+Verified alpha checkpoint: `check` and `build` pass; 39 unit tests and 16 native
+checks pass (15 RPG tests plus the runner baseline), including all nine ability
+effects. A real client loaded the previous Warrior save through schema migration,
+selected Mage in a fresh world, and used R to spend mana and earn XP with Firebolt.
+The hand renderer applied successfully. Final combat feel, audible output,
+third-person/multiplayer presentation and broader GUI review remain local checks.
