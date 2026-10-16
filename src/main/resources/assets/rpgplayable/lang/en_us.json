@@ -1,3 +1,25 @@
 {
-  "rpgplayable.name": "RPG Playable"
+  "rpgplayable.name": "RPG Playable",
+  "key.category.rpgplayable.general": "RPG Playable",
+  "key.rpgplayable.character": "Character",
+  "class.rpgplayable.warrior": "Warrior",
+  "screen.rpgplayable.character": "Character",
+  "screen.rpgplayable.no_class": "Choose your class to begin",
+  "screen.rpgplayable.choose_warrior": "Choose Warrior",
+  "screen.rpgplayable.allocate": "Allocate Strength (+1)",
+  "screen.rpgplayable.level_xp": "Level %s  |  XP %s / %s",
+  "screen.rpgplayable.max_level": "Level %s — maximum level",
+  "screen.rpgplayable.strength": "Strength %s  |  +%s attack damage",
+  "screen.rpgplayable.points": "Unspent points: %s",
+  "screen.rpgplayable.hint": "Defeat hostile mobs to earn RPG XP",
+  "screen.rpgplayable.waiting": "Waiting for server…",
+  "screen.rpgplayable.applied": "Applied",
+  "screen.rpgplayable.rejected": "Not applied — check your current points",
+  "screen.rpgplayable.timeout": "No reply yet — check your connection",
+  "screen.rpgplayable.unavailable": "Waiting for an RPG Playable server",
+  "hud.rpgplayable.choose": "[%s] Choose your class",
+  "hud.rpgplayable.level": "Warrior  Lv %s  |  STR %s",
+  "hud.rpgplayable.xp": "RPG XP %s / %s",
+  "hud.rpgplayable.max": "Maximum RPG level",
+  "hud.rpgplayable.level_up": "Level %s! Stat points earned"
 }

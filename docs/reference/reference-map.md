@@ -68,6 +68,16 @@ named behaviors. Boss and world-generation implementation was not inspected.
 The reference test suites were inspected, not run; their documented pass counts
 are not evidence for this new project's build or runtime.
 
+For the first playable slice, targeted follow-up reads at the same commit covered
+`ClassRuntimeGameTests.java` and the `CoreRuntimeGameTests.reconnect` helper under
+`rpg-core/src/gametest/java/dev/mcrpg/core/runtime/`. The native save/reconnect
+fixture pattern was adapted in this project's test source set only. A normal
+`ServerPlayerEntity` is used instead of the reference's deprecated creative mock,
+whose hardcoded Creative mode is unsuitable for this slice's Survival rewards.
+The key-binding category and HUD registration signatures in `RpgCoreClient.java`
+were also checked against the installed Fabric/Minecraft APIs; no new gameplay
+systems were ported from that initializer.
+
 ## Excessive systems to leave behind
 
 - Four separately packaged Fabric modules, build aggregation, artifact-boundary

@@ -38,6 +38,18 @@ tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
 
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = 'rpgplayable_gametest'
+        enableGameTests = providers.gradleProperty('rpgGameTests').map { it == 'true' }.getOrElse(false)
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('gametestClasses')
+}
+
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(21)
     withSourcesJar()

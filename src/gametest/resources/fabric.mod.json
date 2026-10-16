@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "rpgplayable_gametest",
+  "version": "1.0.0",
+  "name": "RPG Playable server tests",
+  "environment": "server",
+  "entrypoints": {
+    "fabric-gametest": ["dev.fupez.rpgplayable.runtime.PlayableGameTests"]
+  },
+  "depends": {"rpgplayable": "*"}
+}
