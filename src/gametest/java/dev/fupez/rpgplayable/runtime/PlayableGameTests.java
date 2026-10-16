@@ -72,6 +72,7 @@ public final class PlayableGameTests {
         RpgGameplay.handleAction(player, new ProgressActionPayload(ProgressActionPayload.ALLOCATE_STRENGTH, 2));
         var expected = RpgGameplay.progress(player);
         double damage = player.getAttributeValue(EntityAttributes.ATTACK_DAMAGE);
+        require(dev.fupez.rpgplayable.ability.CleaveGameplay.request(player), "Pre-death Cleave failed");
         String beforeAttributes = player.getAttributeInstance(EntityAttributes.ATTACK_DAMAGE).getModifiers().toString();
         double beforeBase = player.getAttributeInstance(EntityAttributes.ATTACK_DAMAGE).getBaseValue();
         // Force a late default-phase reset: restoration must run after ALL default callbacks,
@@ -86,12 +87,96 @@ public final class PlayableGameTests {
         require(!player.isAlive(), "Fixture player did not die");
         var restored = context.getWorld().getServer().getPlayerManager().respawnPlayer(player, false, Entity.RemovalReason.KILLED);
         require(RpgGameplay.progress(restored).equals(expected), "Death/respawn lost permanent progress");
+        require(!dev.fupez.rpgplayable.ability.CleaveGameplay.request(restored), "Death reset Cleave cooldown");
         require(Math.abs(restored.getAttributeValue(EntityAttributes.ATTACK_DAMAGE) - damage) < 0.00001, "Respawn damage mismatch: before=" + damage + " (base=" + beforeBase + ", modifiers=" + beforeAttributes
                 + "), after=" + restored.getAttributeValue(EntityAttributes.ATTACK_DAMAGE) + " (base="
                 + restored.getAttributeInstance(EntityAttributes.ATTACK_DAMAGE).getBaseValue() + ", modifiers="
                 + restored.getAttributeInstance(EntityAttributes.ATTACK_DAMAGE).getModifiers() + ")");
         context.getWorld().getServer().getPlayerManager().remove(restored);
         context.complete();
+    }
+
+    @GameTest(maxTicks = 140)
+    public void cleaveTimingTargetsAndCooldown(TestContext context) {
+        var player = createPlayer(context);
+        var origin = context.getAbsolutePos(new net.minecraft.util.math.BlockPos(1, 1, 1));
+        player.refreshPositionAndAngles(origin.getX() + 0.5, origin.getY(), origin.getZ() + 0.5, 0, 0);
+        player.setNoGravity(true);
+        require(!dev.fupez.rpgplayable.ability.CleaveGameplay.request(player), "Unselected player used Cleave");
+        choose(player);
+        var front = context.spawnMob(EntityType.HUSK, 1, 1, 3);
+        var rear = context.spawnMob(EntityType.HUSK, 1, 1, 0);
+        var passive = context.spawnMob(EntityType.COW, 2, 1, 3);
+        front.setAiDisabled(true); rear.setAiDisabled(true); passive.setAiDisabled(true);
+        front.setNoGravity(true); rear.setNoGravity(true); passive.setNoGravity(true);
+        float health = front.getHealth();
+        require(dev.fupez.rpgplayable.ability.CleaveGameplay.request(player), "Warrior could not cast");
+        require(!dev.fupez.rpgplayable.ability.CleaveGameplay.request(player), "Duplicate cast accepted");
+        require(front.getHealth() == health, "Cleave hit before windup");
+        context.waitAndRun(7, () -> {
+            require(front.getHealth() < health, "Cleave did not hit at its impact tick");
+            require(rear.getHealth() == rear.getMaxHealth(), "Cleave hit behind the player");
+            require(passive.getHealth() == passive.getMaxHealth(), "Cleave hit a passive mob");
+            require(!dev.fupez.rpgplayable.ability.CleaveGameplay.request(player), "Cleave ignored cooldown");
+            float after = front.getHealth();
+            context.waitAndRun(20, () -> require(front.getHealth() == after, "Cleave repeated its impact"));
+        });
+        context.waitAndRun(102, () -> {
+            require(dev.fupez.rpgplayable.ability.CleaveGameplay.request(player), "Cooldown never became ready");
+            player.changeGameMode(GameMode.SPECTATOR);
+        });
+        context.waitAndRun(110, () -> {
+            require(!dev.fupez.rpgplayable.ability.CleaveGameplay.request(player), "Spectator could cast");
+            context.getWorld().getServer().getPlayerManager().remove(player);
+            context.complete();
+        });
+    }
+
+    @GameTest(maxTicks = 40)
+    public void cleaveInterruptedByReconnectRetainsCooldown(TestContext context) {
+        var player = createPlayer(context);
+        choose(player);
+        var origin = context.getAbsolutePos(new net.minecraft.util.math.BlockPos(1, 1, 1));
+        player.refreshPositionAndAngles(origin.getX() + 0.5, origin.getY(), origin.getZ() + 0.5, 0, 0);
+        var target = context.spawnMob(EntityType.HUSK, 1, 1, 3);
+        target.setAiDisabled(true); target.setNoGravity(true);
+        require(dev.fupez.rpgplayable.ability.CleaveGameplay.request(player), "Initial cast failed");
+        var restored = reconnect(context, player);
+        require(!dev.fupez.rpgplayable.ability.CleaveGameplay.request(restored), "Reconnect reset the cooldown");
+        context.waitAndRun(8, () -> {
+            require(target.getHealth() == target.getMaxHealth(), "Disconnected actor landed a delayed hit");
+            var wire = new net.minecraft.network.RegistryByteBuf(io.netty.buffer.Unpooled.buffer(), context.getWorld().getRegistryManager());
+            try {
+                var state = new CleaveStatePayload(80, 100, 6, 8, CleaveStatePayload.INTERRUPTED, true);
+                CleaveStatePayload.CODEC.encode(wire, state);
+                require(CleaveStatePayload.CODEC.decode(wire).equals(state), "Cleave state wire mismatch");
+                var intent = new CleaveRequestPayload();
+                CleaveRequestPayload.CODEC.encode(wire, intent);
+                require(CleaveRequestPayload.CODEC.decode(wire).equals(intent), "Cleave intent wire mismatch");
+            } finally { wire.release(); }
+            context.getWorld().getServer().getPlayerManager().remove(restored);
+            context.complete();
+        });
+    }
+
+    @GameTest(maxTicks = 30)
+    public void cleaveCannotHitThroughSolidWall(TestContext context) {
+        var player = createPlayer(context);
+        choose(player);
+        var origin = context.getAbsolutePos(new net.minecraft.util.math.BlockPos(1, 1, 1));
+        player.refreshPositionAndAngles(origin.getX() + 0.5, origin.getY(), origin.getZ() + 0.5, 0, 0);
+        player.setNoGravity(true);
+        var target = context.spawnMob(EntityType.HUSK, 1, 1, 3);
+        target.setAiDisabled(true); target.setNoGravity(true);
+        context.setBlockState(1, 2, 2, net.minecraft.block.Blocks.STONE);
+        context.setBlockState(1, 1, 2, net.minecraft.block.Blocks.STONE);
+        require(!player.canSee(target), "Wall fixture did not block line of sight");
+        require(dev.fupez.rpgplayable.ability.CleaveGameplay.request(player), "Wall cast failed");
+        context.waitAndRun(8, () -> {
+            require(target.getHealth() == target.getMaxHealth(), "Cleave damaged through a wall");
+            context.getWorld().getServer().getPlayerManager().remove(player);
+            context.complete();
+        });
     }
 
     private static ServerPlayerEntity createPlayer(TestContext context) {

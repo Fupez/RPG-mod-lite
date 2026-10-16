@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "dev.fupez.rpgplayable.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": ["CleaveHandMixin"],
+  "injectors": { "defaultRequire": 1 }
+}

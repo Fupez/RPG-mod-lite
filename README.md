@@ -3,7 +3,7 @@
 Standalone Minecraft Java 1.21.10 RPG project in `Fupez/RPG-mod-lite`.
 The first playable slice adds Warrior selection, RPG XP from hostile mobs,
 leveling, and Strength allocation with a real melee-damage bonus. Vanilla XP is
-unchanged. Other class kits and abilities are not implemented yet.
+unchanged. Warrior now has Cleave; other class kits are not implemented yet.
 It requires Fabric Loader 0.19.5 or later and Fabric API 0.138.4+1.21.10
 or a compatible later release for Minecraft 1.21.10. It does not depend on
 `Fupez/RPG-mod` or any of that project's mod JARs.
@@ -55,6 +55,10 @@ dependency caches, not as the default build command.
    reach level 2 and award one stat point.
 4. Open K and allocate Strength. Each point adds 0.5 vanilla attack damage by
    default; the screen displays the server's actual bonus.
+5. Press **R** for **Cleave** (rebindable): a short wind-up, frontal strike and
+   recovery, with a five-second cooldown shown beside the hotbar. It targets
+   visible hostile mobs within three blocks, dealing 6 + Strength bonus damage
+   before vanilla mitigation. It does not require a weapon.
 
 The HUD shows XP/level/Strength; level-up feedback includes sound and particles.
 Normal gameplay uses the screen rather than commands or chat. XP, class and points
@@ -84,9 +88,12 @@ One Gradle module and one mod ID, `rpgplayable`, under
 Loom compiles the source sets separately and packages both into one mod JAR.
 Shared metadata lives in `src/main/resources/fabric.mod.json`.
 
-The slice uses one versioned persistent Fabric attachment, two typed payloads,
-and one server mutation boundary. There are no custom mixins, ability frameworks
-or animation libraries. Keep editable assets in
+Progression uses one versioned persistent Fabric attachment and intent/snapshot
+payloads. Cleave has its own server timing/targeting boundary and small typed
+request/state packets; session cooldowns survive player replacement and reconnect.
+One client-only mixin animates the first-person hand during wind-up/recovery;
+vanilla hand swings and particles mark the server's impact tick. No animation
+library or general ability framework is required. Keep editable assets in
 `asset-sources/` and exported assets in `src/main/resources/assets/rpgplayable/`.
 Editable source folders are provided for Blockbench, animations, UI, icons and
 textures. Add future packages only when they contain real code.
@@ -97,4 +104,6 @@ do not copy its four-module architecture, balance formulas or class catalog.
 
 See [the slice contract and manual checks](docs/development/first-playable-slice.md)
 for scope and remaining acceptance work. Mage, Rogue, the other four primary
-stats and abilities remain future slices; they have no placeholder gameplay.
+stats and additional abilities remain future slices; they have no placeholder gameplay.
+See [Cleave behavior and acceptance](docs/development/cleave.md) for timing, tuning
+and cooldown lifecycle.

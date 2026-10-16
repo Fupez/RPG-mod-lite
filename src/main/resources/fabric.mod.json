@@ -3,17 +3,29 @@
   "id": "rpgplayable",
   "version": "${version}",
   "name": "RPG Playable",
-  "description": "A standalone, gameplay-first Minecraft RPG mod. Foundation only.",
-  "authors": ["Fupez"],
+  "description": "A standalone Minecraft RPG: Warrior progression and Cleave combat.",
+  "authors": [
+    "Fupez"
+  ],
   "environment": "*",
   "entrypoints": {
-    "main": ["dev.fupez.rpgplayable.RpgPlayable"],
-    "client": ["dev.fupez.rpgplayable.client.RpgPlayableClient"]
+    "main": [
+      "dev.fupez.rpgplayable.RpgPlayable"
+    ],
+    "client": [
+      "dev.fupez.rpgplayable.client.RpgPlayableClient"
+    ]
   },
   "depends": {
     "fabricloader": ">=${loader_version}",
     "minecraft": "~${minecraft_version}",
     "java": ">=21",
     "fabric-api": ">=${fabric_version}"
-  }
+  },
+  "mixins": [
+    {
+      "config": "rpgplayable.client.mixins.json",
+      "environment": "client"
+    }
+  ]
 }

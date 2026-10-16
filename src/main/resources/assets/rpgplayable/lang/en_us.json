@@ -21,5 +21,16 @@
   "hud.rpgplayable.level": "Warrior  Lv %s  |  STR %s",
   "hud.rpgplayable.xp": "RPG XP %s / %s",
   "hud.rpgplayable.max": "Maximum RPG level",
-  "hud.rpgplayable.level_up": "Level %s! Stat points earned"
+  "hud.rpgplayable.level_up": "Level %s! Stat points earned",
+  "key.rpgplayable.cleave": "Cleave",
+  "ability.rpgplayable.cleave": "Cleave",
+  "cleave.rpgplayable.ready": "Ready",
+  "cleave.rpgplayable.windup": "Wind-up",
+  "cleave.rpgplayable.recovery": "Recovery",
+  "cleave.rpgplayable.sync": "Syncing…",
+  "cleave.rpgplayable.waiting": "Waiting…",
+  "cleave.rpgplayable.timeout": "No reply — check connection",
+  "cleave.rpgplayable.unavailable": "Cleave requires a live Survival/Adventure Warrior",
+  "cleave.rpgplayable.cooldown": "Cleave is cooling down",
+  "cleave.rpgplayable.interrupted": "Cleave interrupted — cooldown remains"
 }

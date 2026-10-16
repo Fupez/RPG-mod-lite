@@ -11,6 +11,7 @@ public final class RpgPlayable implements ModInitializer {
     @Override
     public void onInitialize() {
         dev.fupez.rpgplayable.player.RpgGameplay.initialize();
+        dev.fupez.rpgplayable.ability.CleaveGameplay.initialize();
         LOGGER.info("RPG Playable initialized");
     }
 }
