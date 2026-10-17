@@ -156,3 +156,14 @@ Avoid excessive status narration and repeated project-history summaries.
 A feature is complete when its gameplay behavior works, relevant tests pass, client/server ownership is correct, persistence/networking work where required, the player can actually use it, the UI communicates its state, appropriate feedback exists, and relevant build checks pass.
 
 Visual features also require manual in-game review.
+
+
+## Optional external tools and Codex workflows
+
+- Codex reads this repository's `AGENTS.md` and repo-local skills under `.agents/skills/`. Skills provide repeatable instructions; they do not create live connections to third-party apps.
+- Keep editable Blockbench sources under `asset-sources/blockbench/` and animation sources under `asset-sources/animations/`; keep runtime exports under `src/main/resources/assets/`, following the existing asset rules above. Codex can prepare and inspect files, but cannot operate Blockbench unless a supported connector is available.
+- GeckoLib is optional. Verify the exact Minecraft 1.21.10 Fabric artifact before adding it. The official GeckoLib matrix currently lists 1.21.10 as 5.3-Alpha-3; do not add this alpha to the Lite runtime by default. Prefer the existing player pose/animation approach when it meets the feature; if a real feature needs GeckoLib, make a focused dependency change and test client and dedicated-server loading.
+- Foundry AI Modding Studio is a separate local application. Treat it as a manual draft/import/export workflow unless its vendor documents a supported API, CLI or MCP integration. Review any returned changes in this repository and run its own verification.
+- Claude Code and Gemini CLI are optional independent reviewers. Ask for read-only findings on a bounded diff; assess findings against source and tests. They do not approve, edit, merge or release work automatically.
+- Inspect code and diffs for credentials or private player data before sending them to an external model provider. Never commit provider keys or authentication material.
+- Use `.agents/skills/minecraft-model-animation/SKILL.md` for model/animation tasks and `.agents/skills/independent-code-review/SKILL.md` for second-opinion reviews.
