@@ -2,6 +2,6 @@
   "required": true,
   "package": "dev.fupez.rpgplayable.client.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": ["CleaveHandMixin"],
+  "client": ["AbilityHandMixin", "AbilityPlayerRenderStateMixin", "AbilityPlayerRendererMixin", "AbilityBipedModelMixin"],
   "injectors": { "defaultRequire": 1 }
 }

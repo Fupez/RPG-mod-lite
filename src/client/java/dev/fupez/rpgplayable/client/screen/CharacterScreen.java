@@ -29,11 +29,17 @@ public final class CharacterScreen extends Screen {
         }
         for (int i = 0; i < allocations.length; i++) {
             final int index = i;
-            allocations[i] = addDrawableChild(ButtonWidget.builder(Text.literal("+1"), b -> ClientProgress.request(ALLOCATE[index]))
+            allocations[i] = addDrawableChild(ButtonWidget.builder(Text.translatable("screen.rpgplayable.plus_one"), b -> ClientProgress.request(ALLOCATE[index]))
                     .dimensions(left + panelWidth - 48, top + 76 + i * 20, 32, 18)
+                    .narrationSupplier(defaultNarration -> Text.translatable("screen.rpgplayable.allocate", Text.translatable("stat.rpgplayable." + Stat.values()[index].id())))
                     .tooltip(Tooltip.of(Text.translatable("stat.rpgplayable." + Stat.values()[i].id() + ".description"))).build());
         }
-        addDrawableChild(ButtonWidget.builder(Text.translatable("gui.done"), b -> close()).dimensions(left + 16, top + 208, panelWidth - 32, 20).build());
+        int footerWidth = (panelWidth - 36) / 2;
+        addDrawableChild(ButtonWidget.builder(Text.translatable("screen.rpgplayable.guide"), b -> client.setScreen(new AbilityGuideScreen(this)))
+                .dimensions(left + 16, top + 208, footerWidth, 20)
+                .tooltip(Tooltip.of(Text.translatable("screen.rpgplayable.guide.tooltip"))).build());
+        addDrawableChild(ButtonWidget.builder(Text.translatable("gui.done"), b -> close())
+                .dimensions(left + 20 + footerWidth, top + 208, footerWidth, 20).build());
         refresh();
     }
     @Override public void tick() { refresh(); }
@@ -66,7 +72,7 @@ public final class CharacterScreen extends Screen {
                 int row = (mouseY - top - 76) / 20;
                 var stat = Stat.values()[row];
                 Text description = Text.translatable("stat.rpgplayable." + stat.id() + ".description");
-                if (row == 0) description = Text.literal(description.getString() + String.format(Locale.ROOT, " Current melee bonus: +%.2f", snapshot.strengthBonus()));
+                if (row == 0) description = Text.translatable("stat.rpgplayable.strength.current", description, String.format(Locale.ROOT, "%.2f", snapshot.strengthBonus()));
                 context.drawOrderedTooltip(textRenderer, textRenderer.wrapLines(description, 210), mouseX, mouseY);
             }
         } else centered(context, Text.translatable("screen.rpgplayable.permanent"), top + 49, 0xffc7d6e6);

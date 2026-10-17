@@ -25,3 +25,18 @@ jobs:
         run: ./gradlew runGameTest -PrpgGameTests=true
       - name: Build
         run: ./gradlew build
+      - name: Save installable mod
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpg-playable
+          path: |
+            build/libs/rpg-playable-*.jar
+            !build/libs/*-sources.jar
+          if-no-files-found: error
+      - name: Save test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: build/reports/tests/
+          if-no-files-found: ignore

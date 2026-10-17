@@ -16,7 +16,7 @@ public final class ProgressHud {
             if (client.player == null || client.options.hudHidden || snapshot == null || client.currentScreen != null) return;
             int x = 6, y = 6, width = Math.min(184, context.getScaledWindowWidth() - 12);
             var p = snapshot.progress();
-            context.fill(x, y, x + width, y + (p.selected() ? 64 : 22), 0xcc101720);
+            context.fill(x, y, x + width, y + (p.selected() ? 77 : 22), 0xcc101720);
             if (!p.selected()) {
                 context.drawTextWithShadow(client.textRenderer, Text.translatable("hud.rpgplayable.choose", characterKey.getBoundKeyLocalizedText()), x + 4, y + 5, 0xffe7c67a);
                 return;
@@ -35,8 +35,13 @@ public final class ProgressHud {
             }
             bar(context, x + 4, y + 45, width - 8, ClientNumbers.ratio(p.xp(), snapshot.nextLevelXp()), 0xffad893e);
             context.drawTextWithShadow(client.textRenderer, Text.literal("XP " + ClientNumbers.compact(p.xp()) + " / " + ClientNumbers.compact(snapshot.nextLevelXp())), x + 6, y + 46, 0xffffffff);
+            Text characterHint = p.unspentPoints().signum() > 0
+                    ? Text.translatable("hud.rpgplayable.spend_points", ClientNumbers.compact(p.unspentPoints()), characterKey.getBoundKeyLocalizedText())
+                    : Text.translatable("hud.rpgplayable.character_hint", characterKey.getBoundKeyLocalizedText());
+            context.drawTextWithShadow(client.textRenderer, client.textRenderer.trimToWidth(characterHint.getString(), width - 8),
+                    x + 4, y + 63, p.unspentPoints().signum() > 0 ? 0xffffd36b : 0xffacbac8);
             if (state.levelUpTicks() > 0) context.drawCenteredTextWithShadow(client.textRenderer,
-                    Text.translatable("hud.rpgplayable.level_up", ClientNumbers.compact(p.level())), context.getScaledWindowWidth() / 2, context.getScaledWindowHeight() / 3, 0xffffd36b);
+                    Text.translatable("hud.rpgplayable.level_up", ClientNumbers.compact(p.level())), context.getScaledWindowWidth() / 2, Math.max(y + 82, context.getScaledWindowHeight() / 3), 0xffffd36b);
         });
     }
     static void bar(net.minecraft.client.gui.DrawContext context, int x, int y, int width, double ratio, int color) {
