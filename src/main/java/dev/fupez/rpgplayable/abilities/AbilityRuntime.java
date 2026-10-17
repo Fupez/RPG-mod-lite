@@ -10,7 +10,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.*;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.fabricmc.fabric.api.networking.v1.*;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.*;
@@ -117,9 +116,8 @@ public final class AbilityRuntime {
             state.resources = state.resources.spend(definition.resource(), definition.cost());
             state.readyAt[slot] = clock + definition.cooldownTicks();
             state.cast = new Cast(player, definition);
+            AbilityVisuals.start(player, definition);
             animate(player, definition, false);
-            AbilityEffects.particles(player.getEntityWorld(), definition.animation() == AnimationStyle.CAST ? ParticleTypes.ENCHANT : ParticleTypes.CRIT,
-                    player.getEntityPos().add(0, 1, 0).add(AbilityEffects.forward(player).multiply(0.5)), 7, 0.2, 0.025);
             send(player, requestId, CombatSnapshotPayload.ACCEPTED);
             return true;
         }
@@ -156,6 +154,7 @@ public final class AbilityRuntime {
         var cast = state.cast;
         if (cast == null) return;
         state.cast = null;
+        AbilityVisuals.cancel(cast.actor, cast.definition.id());
         animate(cast.actor, cast.definition, true);
         send(recipient, 0, CombatSnapshotPayload.INTERRUPTED);
     }

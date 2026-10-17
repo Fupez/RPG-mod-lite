@@ -10,6 +10,7 @@ import org.lwjgl.glfw.GLFW;
 public final class RpgPlayableClient implements ClientModInitializer {
     @Override public void onInitializeClient() {
         ClientProgress.register(); ClientAbilities.register();
+        dev.fupez.rpgplayable.client.fx.ClientVisualEffects.register();
         var category = KeyBinding.Category.create(Identifier.of("rpgplayable", "general"));
         var character = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.rpgplayable.character", GLFW.GLFW_KEY_K, category));
         KeyBinding[] abilities = new KeyBinding[3];

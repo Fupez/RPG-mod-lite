@@ -3,7 +3,6 @@ package dev.fupez.rpgplayable.abilities;
 import dev.fupez.rpgplayable.stats.DerivedStats;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.Monster;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -21,7 +20,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-/** Native particle spells; projectiles exist only as bounded server tick state. */
+/** Cosmetic announcements accompany projectiles held only as bounded server tick state. */
 public final class MageKit implements AbilityKit {
     private static final int MAX_BOLTS = 128;
     private static final int BOLT_LIFETIME = 28;
@@ -47,7 +46,9 @@ public final class MageKit implements AbilityKit {
                 bolts.add(new Firebolt(player, player.getEntityWorld().getRegistryKey(),
                         player.getEyePos(), player.getRotationVec(1).normalize().multiply(BOLT_SPEED),
                         AbilityCatalog.damage(AbilityId.FIREBOLT) * stats.magicMultiplier()));
-                AbilityEffects.sound(player, SoundEvents.ENTITY_BLAZE_SHOOT, 0.65f, 1.3f);
+                AbilityVisuals.release(player, AbilityId.FIREBOLT);
+                AbilityEffects.sound(player, SoundEvents.ENTITY_BLAZE_SHOOT, 0.55f, 1.3f);
+                AbilityEffects.sound(player, SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, 0.22f, 1.7f);
             }
             case ARCANE_BURST -> arcaneBurst(player, stats);
             case BLINK -> blink(player);
@@ -56,15 +57,9 @@ public final class MageKit implements AbilityKit {
     }
 
     private void arcaneBurst(ServerPlayerEntity player, DerivedStats stats) {
-        ServerWorld world = player.getEntityWorld();
         Vec3d center = player.getEntityPos().add(0, 0.75, 0);
-        // A ring communicates the same four-block radius used by the server hit query.
-        for (int point = 0; point < 32; point++) {
-            double angle = point * Math.PI * 2 / 32;
-            AbilityEffects.particles(world, ParticleTypes.ENCHANTED_HIT,
-                    center.add(Math.cos(angle) * 4, 0, Math.sin(angle) * 4), 2, 0.08, 0.02);
-        }
-        AbilityEffects.particles(world, ParticleTypes.ELECTRIC_SPARK, center, 24, 0.7, 0.12);
+        AbilityVisuals.release(player, AbilityId.ARCANE_BURST);
+        AbilityEffects.sound(player, SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, 0.3f, 1.4f);
         AbilityEffects.sound(player, SoundEvents.ENTITY_EVOKER_CAST_SPELL, 0.8f, 1.4f);
         boolean hit = false;
         for (LivingEntity target : AbilityEffects.hostiles(player, 4)) {
@@ -73,17 +68,15 @@ public final class MageKit implements AbilityKit {
         }
         if (hit) {
             player.heal((float) Math.min(4, 1.5 * stats.supportMultiplier()));
-            AbilityEffects.particles(world, ParticleTypes.ENCHANT, center, 12, 0.5, 0.08);
+            AbilityVisuals.hit(player, AbilityId.ARCANE_BURST, center);
         }
     }
 
     private void blink(ServerPlayerEntity player) {
-        ServerWorld world = player.getEntityWorld();
-        Vec3d departure = player.getEntityPos().add(0, 0.8, 0);
+        Vec3d departure = player.getEntityPos();
         if (!AbilityEffects.safeDash(player, AbilityEffects.forward(player), BLINK_DISTANCE)) return;
-        AbilityEffects.particles(world, ParticleTypes.PORTAL, departure, 24, 0.5, 0.25);
-        AbilityEffects.particles(world, ParticleTypes.REVERSE_PORTAL,
-                player.getEntityPos().add(0, 0.8, 0), 24, 0.5, 0.12);
+        AbilityVisuals.movement(player, AbilityId.BLINK, departure, player.getEntityPos());
+        AbilityEffects.sound(player, SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, 0.25f, 1.6f);
         AbilityEffects.sound(player, SoundEvents.ENTITY_ENDERMAN_TELEPORT, 0.65f, 1.2f);
     }
 
@@ -133,27 +126,24 @@ public final class MageKit implements AbilityKit {
             }
         }
         Vec3d visibleEnd = closestPoint == null ? unobstructedEnd : closestPoint;
-        for (int step = 1; step <= 3; step++) {
-            var point = start.lerp(visibleEnd, step / 3.0);
-            // Close flame sprites cover the first-person camera; retain the traveling trail beyond the hand.
-            if (point.squaredDistanceTo(owner.getEyePos()) >= 2.25)
-                AbilityEffects.particles(world, ParticleTypes.SMALL_FLAME, point, 2, 0.035, 0.005);
-        }
+        AbilityVisuals.segment(owner, AbilityId.FIREBOLT, start, visibleEnd);
         if (closest != null) {
             AbilityEffects.damage(owner, closest, bolt.damage, true);
-            impact(world, visibleEnd);
+            impact(owner, visibleEnd);
             return false;
         }
         if (block.getType() != HitResult.Type.MISS) {
-            impact(world, visibleEnd);
+            impact(owner, visibleEnd);
             return false;
         }
         bolt.position = end;
         return true;
     }
 
-    private void impact(ServerWorld world, Vec3d position) {
-        AbilityEffects.particles(world, ParticleTypes.SMALL_FLAME, position, 12, 0.16, 0.04);
+    private void impact(ServerPlayerEntity owner, Vec3d position) {
+        AbilityVisuals.impact(owner, AbilityId.FIREBOLT, position);
+        owner.getEntityWorld().playSound(null, position.x, position.y, position.z,
+                SoundEvents.BLOCK_AMETHYST_BLOCK_HIT, net.minecraft.sound.SoundCategory.PLAYERS, 0.32f, 1.6f);
     }
 
     @Override

@@ -6,6 +6,20 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ClientCombatStateTest {
+    @Test void ignoredKeyPressCannotMoveFailureFeedbackToAnotherAbility() {
+        var state = new ClientCombatState();
+        state.accept(snapshot(0, CombatSnapshotPayload.UPDATE, 0));
+        var request = state.beginRequest(0).orElseThrow();
+        assertTrue(state.beginRequest(2).isEmpty());
+        state.accept(snapshot(request.requestId(), CombatSnapshotPayload.NO_RESOURCE, 0));
+        assertEquals(0, state.feedbackSlot());
+        var next = state.beginRequest(2).orElseThrow();
+        for (int i = 0; i < 100; i++) state.tick();
+        assertEquals("timeout", state.feedback());
+        assertEquals(2, state.feedbackSlot());
+        state.clear();
+        assertEquals(-1, state.feedbackSlot());
+    }
     private static CombatSnapshotPayload snapshot(long request, int result, int cooldown) {
         return snapshot(request, result, cooldown, -1, 0);
     }

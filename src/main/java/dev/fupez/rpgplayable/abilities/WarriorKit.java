@@ -2,7 +2,6 @@ package dev.fupez.rpgplayable.abilities;
 
 import dev.fupez.rpgplayable.stats.DerivedStats;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
@@ -39,15 +38,12 @@ public final class WarriorKit implements AbilityKit {
         for (var target : AbilityEffects.cone(player, 3.5, 110).stream().limit(8).toList()) {
             if (AbilityEffects.damage(player, target, AbilityCatalog.damage(AbilityId.HEAVY_STRIKE) + stats.meleeBonus() * 1.4, false)) {
                 hits++;
-                AbilityEffects.particles(player.getEntityWorld(), ParticleTypes.CRIT,
-                        target.getEntityPos().add(0, target.getHeight() * 0.6, 0), 7, 0.22, 0.12);
+                AbilityVisuals.hit(player, AbilityId.HEAVY_STRIKE,
+                        target.getEntityPos().add(0, target.getHeight() * 0.6, 0));
             }
         }
-        for (int i = 0; i < 9; i++) {
-            double angle = Math.toRadians(player.getYaw() - 55 + i * 13.75);
-            Vec3d position = player.getEntityPos().add(-Math.sin(angle) * 2.4, 1, Math.cos(angle) * 2.4);
-            AbilityEffects.particles(player.getEntityWorld(), ParticleTypes.SWEEP_ATTACK, position, 1, 0, 0);
-        }
+        AbilityVisuals.release(player, AbilityId.HEAVY_STRIKE);
+        AbilityEffects.sound(player, SoundEvents.BLOCK_COPPER_HIT, 0.25f, 0.85f);
         AbilityEffects.sound(player, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP, 0.9f, hits > 0 ? 0.8f : 1.15f);
         if (hits > 0) AbilityEffects.sound(player, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, 0.65f, 0.85f);
     }
@@ -78,15 +74,11 @@ public final class WarriorKit implements AbilityKit {
                 hits++;
                 target.takeKnockback(0.8, -direction.x, -direction.z);
                 target.velocityModified = true;
-                AbilityEffects.particles(player.getEntityWorld(), ParticleTypes.CRIT,
-                        target.getEntityPos().add(0, 0.8, 0), 8, 0.25, 0.12);
+                AbilityVisuals.hit(player, AbilityId.CHARGE, target.getEntityPos().add(0, 0.8, 0));
             }
         }
-        int segments = Math.max(1, (int) Math.ceil(travel.length() * 3));
-        for (int i = 0; i <= segments; i++) {
-            AbilityEffects.particles(player.getEntityWorld(), ParticleTypes.CLOUD,
-                    start.add(travel.multiply((double) i / segments)).add(0, 0.2, 0), 2, 0.15, 0.025);
-        }
+        AbilityVisuals.movement(player, AbilityId.CHARGE, start, end);
+        AbilityEffects.sound(player, SoundEvents.BLOCK_COPPER_STEP, 0.3f, 0.8f);
         AbilityEffects.sound(player, SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, 0.85f, hits > 0 ? 0.8f : 1.2f);
     }
 
@@ -97,20 +89,10 @@ public final class WarriorKit implements AbilityKit {
             if (Math.abs(target.getY() - player.getY()) > 1.75) continue;
             if (AbilityEffects.damage(player, target, AbilityCatalog.damage(AbilityId.GROUND_SLAM) + stats.meleeBonus() * 1.1, false)) {
                 knockAway(player, target, knockback);
-                AbilityEffects.particles(player.getEntityWorld(), ParticleTypes.CRIT,
-                        target.getEntityPos().add(0, 0.5, 0), 5, 0.2, 0.08);
+                AbilityVisuals.hit(player, AbilityId.GROUND_SLAM, target.getEntityPos().add(0, 0.5, 0));
             }
         }
-        // Fixed-size rings keep both network traffic and native particle work bounded.
-        for (int ring = 1; ring <= 2; ring++) {
-            double radius = ring * 1.8;
-            for (int i = 0; i < 20; i++) {
-                double angle = i * Math.PI / 10;
-                AbilityEffects.particles(player.getEntityWorld(), ParticleTypes.POOF,
-                        player.getEntityPos().add(Math.cos(angle) * radius, 0.15, Math.sin(angle) * radius),
-                        1, 0.08, 0.025);
-            }
-        }
+        AbilityVisuals.release(player, AbilityId.GROUND_SLAM);
         AbilityEffects.sound(player, SoundEvents.ENTITY_IRON_GOLEM_ATTACK, 0.85f, 0.65f);
         AbilityEffects.sound(player, SoundEvents.BLOCK_STONE_BREAK, 1.0f, 0.75f);
     }

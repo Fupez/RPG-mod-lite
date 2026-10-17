@@ -4,7 +4,6 @@ import dev.fupez.rpgplayable.stats.DerivedStats;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -53,10 +52,8 @@ public final class RogueKit implements AbilityKit {
         Vec3d from = player.getSyncedPos();
         if (!AbilityEffects.safeDash(player, AbilityEffects.forward(player), DASH_DISTANCE)) return;
         Vec3d to = player.getSyncedPos();
-        for (int i = 0; i <= 8; i++) {
-            AbilityEffects.particles(player.getEntityWorld(), ParticleTypes.CLOUD,
-                    from.lerp(to, i / 8.0).add(0, 0.2, 0), 2, 0.12, 0.02);
-        }
+        AbilityVisuals.movement(player, AbilityId.DASH, from, to);
+        AbilityEffects.sound(player, SoundEvents.BLOCK_IRON_TRAPDOOR_CLOSE, 0.18f, 1.7f);
         // A brief native movement boost makes the landing responsive; Spirit extends it slightly.
         int duration = 16 + (int) Math.min(8, Math.max(0, stats.supportMultiplier() - 1) * 4);
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, duration, 0, false, true, true));
@@ -67,12 +64,14 @@ public final class RogueKit implements AbilityKit {
         List<LivingEntity> targets = AbilityEffects.cone(player, BACKSTAB_RANGE, 100);
         if (targets.isEmpty()) return;
         LivingEntity target = targets.getFirst();
+        AbilityVisuals.release(player, AbilityId.BACKSTAB);
         boolean behind = isBehind(player.getX(), player.getZ(), target.getX(), target.getZ(), target.getYaw());
         double damage = (AbilityCatalog.damage(AbilityId.BACKSTAB) + stats.meleeBonus() + agilityBonus(stats))
                 * (behind ? 1.8 : 1.0);
         if (AbilityEffects.damage(player, target, damage, false)) {
-            AbilityEffects.particles(player.getEntityWorld(), behind ? ParticleTypes.CRIT : ParticleTypes.SWEEP_ATTACK,
-                    target.getSyncedPos().add(0, target.getHeight() * 0.6, 0), behind ? 12 : 4, 0.22, 0.1);
+            AbilityVisuals.hit(player, AbilityId.BACKSTAB,
+                    target.getSyncedPos().add(0, target.getHeight() * 0.6, 0));
+            AbilityEffects.sound(player, SoundEvents.ITEM_TRIDENT_HIT, 0.23f, behind ? 1.6f : 1.3f);
             AbilityEffects.sound(player, behind ? SoundEvents.ENTITY_PLAYER_ATTACK_CRIT
                     : SoundEvents.ENTITY_PLAYER_ATTACK_STRONG, 0.8f, behind ? 1.2f : 1.0f);
         }
@@ -104,7 +103,8 @@ public final class RogueKit implements AbilityKit {
         }
         volleys.add(volley);
         AbilityEffects.sound(player, SoundEvents.ENTITY_ARROW_SHOOT, 0.8f, 1.5f);
-        AbilityEffects.particles(player.getEntityWorld(), ParticleTypes.SWEEP_ATTACK, origin, 2, 0.15, 0);
+        AbilityVisuals.release(player, AbilityId.FAN_OF_KNIVES);
+        AbilityEffects.sound(player, SoundEvents.BLOCK_IRON_TRAPDOOR_OPEN, 0.17f, 1.7f);
     }
 
     @Override
@@ -150,16 +150,15 @@ public final class RogueKit implements AbilityKit {
             }
         }
         if (closest != null) end = start.add(knife.velocity.normalize().multiply(Math.sqrt(closestDistance)));
-        for (int i = 0; i <= 4; i++) {
-            AbilityEffects.particles(volley.world, ParticleTypes.CRIT, start.lerp(end, i / 4.0), 1, 0, 0);
-        }
+        AbilityVisuals.segment(volley.player, AbilityId.FAN_OF_KNIVES, start, end);
         if (closest != null) {
             volley.hit.add(closest.getUuid());
             if (AbilityEffects.damage(volley.player, closest, volley.damage, false)) {
-                AbilityEffects.particles(volley.world, ParticleTypes.CRIT, end, 5, 0.12, 0.06);
+                AbilityVisuals.impact(volley.player, AbilityId.FAN_OF_KNIVES, end);
             }
             return true;
         }
+        if (blocked) AbilityVisuals.impact(volley.player, AbilityId.FAN_OF_KNIVES, end);
         knife.position = end;
         return blocked;
     }

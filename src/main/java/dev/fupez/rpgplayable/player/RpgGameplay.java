@@ -111,8 +111,11 @@ public final class RpgGameplay {
         var after = Progression.addXp(before, amount, rules);
         if (after.equals(before)) return;
         player.setAttached(PROGRESS, after);
-        if (after.level().compareTo(before.level()) > 0)
-            player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.7f, 1.1f);
+        if (after.level().compareTo(before.level()) > 0) {
+            player.getEntityWorld().playSound(null, player.getX(), player.getY(), player.getZ(),
+                    SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.55f, 1.1f);
+            dev.fupez.rpgplayable.abilities.AbilityVisuals.levelUp(player);
+        }
         send(player, 0, true);
     }
 
@@ -150,7 +153,7 @@ public final class RpgGameplay {
         if (!player.isDisconnected() && ServerPlayNetworking.canSend(player, ProgressSnapshotPayload.ID)) {
             var state = progress(player);
             ServerPlayNetworking.send(player, new ProgressSnapshotPayload(state, rules.xpToNextLevel(state.level()),
-                    rules.strengthBonus(state), requestId, accepted));
+                    rules.strengthBonus(state), requestId, accepted, derived(player)));
         }
     }
 }

@@ -3,9 +3,7 @@ package dev.fupez.rpgplayable.abilities;
 import java.util.*;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnGroup;
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.*;
 import net.minecraft.util.math.*;
 
@@ -72,8 +70,5 @@ public final class AbilityEffects {
     }
     public static void sound(ServerPlayerEntity player, SoundEvent sound, float volume, float pitch) {
         player.getEntityWorld().playSound(null, player.getX(), player.getY(), player.getZ(), sound, SoundCategory.PLAYERS, volume, pitch);
-    }
-    public static void particles(ServerWorld world, ParticleEffect effect, Vec3d pos, int count, double spread, double speed) {
-        world.spawnParticles(effect, pos.x, pos.y, pos.z, Math.min(64, Math.max(0, count)), spread, spread, spread, speed);
     }
 }
