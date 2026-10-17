@@ -71,9 +71,10 @@ in `asset-sources/`; exported assets belong in `src/main/resources/assets/rpgpla
 [focused reference map](docs/reference/reference-map.md). Earlier slice documents
 are historical; the checklist above describes the alpha.
 
-Verified alpha checkpoint: `check` and `build` pass; 39 unit tests and 16 native
-checks pass (15 RPG tests plus the runner baseline), including all nine ability
-effects. A real client loaded the previous Warrior save through schema migration,
+Verified alpha checkpoint: `check` and `build` pass; 39 unit tests and 17 native
+checks pass (16 RPG tests plus the runner baseline), including all nine ability
+effects and Fan of Knives hitting a hostile overlapping its launch point.
+A real client loaded the previous Warrior save through schema migration,
 selected Mage in a fresh world, and used R to spend mana and earn XP with Firebolt.
 The hand renderer applied successfully. Final combat feel, audible output,
 third-person/multiplayer presentation and broader GUI review remain local checks.

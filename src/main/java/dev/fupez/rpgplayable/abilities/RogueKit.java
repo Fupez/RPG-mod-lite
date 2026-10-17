@@ -139,7 +139,8 @@ public final class RogueKit implements AbilityKit {
         double closestDistance = Double.POSITIVE_INFINITY;
         for (LivingEntity target : targets) {
             if (volley.hit.contains(target.getUuid())) continue;
-            var intersection = target.getBoundingBox().expand(0.15).raycast(start, end);
+            var bounds = target.getBoundingBox().expand(0.15);
+            var intersection = bounds.contains(start) ? java.util.Optional.of(start) : bounds.raycast(start, end);
             if (intersection.isPresent()) {
                 double distance = intersection.get().squaredDistanceTo(start);
                 if (distance < closestDistance) {

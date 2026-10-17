@@ -25,10 +25,15 @@ public final class ClientAbilities {
             context.client().execute(() -> {
                 if (context.client().player != receivingPlayer) return;
                 if (payload.entityId() != receivingPlayer.getId()) {
-                    if (payload.windupTicks() > 0 && context.client().world != null
+                    if (context.client().world != null
                             && context.client().world.getEntityById(payload.entityId()) instanceof net.minecraft.entity.LivingEntity observerActor) {
                         observerActor.handSwinging = false;
-                        observerActor.swingHand(net.minecraft.util.Hand.OFF_HAND);
+                        if (payload.windupTicks() > 0) observerActor.swingHand(net.minecraft.util.Hand.OFF_HAND);
+                        else {
+                            observerActor.handSwingTicks = 0;
+                            observerActor.handSwingProgress = 0;
+                            observerActor.lastHandSwingProgress = 0;
+                        }
                     }
                     return;
                 }

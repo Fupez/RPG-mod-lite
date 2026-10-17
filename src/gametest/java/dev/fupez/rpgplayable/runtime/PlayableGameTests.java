@@ -251,6 +251,30 @@ public final class PlayableGameTests {
         });
     }
 
+    @GameTest(maxTicks = 20)
+    public void fanOfKnivesHitsHostileContainingItsLaunchPoint(TestContext context) {
+        var player = createPlayer(context);
+        arena(context, player);
+        select(player, PlayerClass.ROGUE);
+        var target = context.spawnMob(EntityType.HUSK, 1, 1, 1);
+        target.setAiDisabled(true);
+        target.setNoGravity(true);
+        target.setPosition(player.getEntityPos());
+        var origin = player.getEyePos().add(0, -0.15, 0);
+        require(target.getBoundingBox().expand(0.15).contains(origin), "Fixture does not contain knife origin");
+        float before = target.getHealth();
+        var kit = new dev.fupez.rpgplayable.abilities.RogueKit();
+        try {
+            kit.execute(player, dev.fupez.rpgplayable.abilities.AbilityId.FAN_OF_KNIVES, RpgGameplay.derived(player));
+            kit.tick(context.getWorld().getServer());
+            require(target.getHealth() < before, "Fan of Knives missed the hostile containing its launch point");
+        } finally {
+            kit.clear();
+            context.getWorld().getServer().getPlayerManager().remove(player);
+        }
+        context.complete();
+    }
+
     private static void select(ServerPlayerEntity player, PlayerClass clazz) {
         int action = switch (clazz) {
             case WARRIOR -> ProgressActionPayload.SELECT_WARRIOR;
